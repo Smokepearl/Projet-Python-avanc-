@@ -172,6 +172,8 @@ class App(tk.Tk):
             self.after(0, lambda: self._on_download_done(inserted))
         except DataFetchError as exc:
             self.after(0, lambda: self._on_download_error(str(exc)))
+        except Exception as exc:  # noqa: BLE001 - ne jamais planter en silence
+            self.after(0, lambda e=exc: self._on_download_error(repr(e)))
 
     def _on_download_done(self, inserted: int) -> None:
         self._set_buttons_state("normal")

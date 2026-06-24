@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import os
 import sqlite3
+import threading
 from contextlib import contextmanager
 from typing import Iterable, Optional
 
@@ -31,8 +32,11 @@ class Database:
             os.makedirs(os.path.dirname(db_path), exist_ok=True)
         # Connexion persistante : indispensable pour une base ":memory:"
         # (sinon chaque nouvelle connexion repartirait d'une base vide).
-        self._conn = sqlite3.connect(self.db_path)
+        # check_same_thread=False : l'interface lance les téléchargements dans
+        # un thread séparé ; un verrou sérialise les accès pour rester sûr.
+        self._conn = sqlite3.connect(self.db_path, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
+        self._lock = threading.Lock()
         self._init_schema()
 
     # ------------------------------------------------------------------ #
@@ -40,13 +44,14 @@ class Database:
     # ------------------------------------------------------------------ #
     @contextmanager
     def _connect(self):
-        """Context manager : réutilise la connexion, commit ou rollback."""
-        try:
-            yield self._conn
-            self._conn.commit()
-        except sqlite3.Error:
-            self._conn.rollback()
-            raise
+        """Context manager : réutilise la connexion (sous verrou), commit/rollback."""
+        with self._lock:
+            try:
+                yield self._conn
+                self._conn.commit()
+            except sqlite3.Error:
+                self._conn.rollback()
+                raise
 
     def close(self) -> None:
         """Ferme la connexion à la base."""

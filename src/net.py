@@ -19,6 +19,15 @@ def enable_system_trust_store() -> bool:
         import truststore
 
         truststore.inject_into_ssl()
+        # Avec truststore + urllib3, un avertissement « InsecureRequestWarning »
+        # cosmétique peut apparaître bien que la vérification se fasse via le
+        # magasin du système. On le masque pour garder une sortie propre.
+        try:
+            import urllib3
+
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        except Exception:  # noqa: BLE001
+            pass
         return True
     except Exception:  # noqa: BLE001 - purement optionnel
         return False
