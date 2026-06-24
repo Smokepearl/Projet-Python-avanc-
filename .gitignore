@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Données générées par l'application
+*.db
+output/
+data/*.db
+settings.json
+
+# Fichiers IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# On garde le logo (image #2 lue depuis le disque)
+!assets/logo.png
