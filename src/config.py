@@ -27,7 +27,7 @@ class AppConfig:
     font_family: str = "Segoe UI"
     font_size: int = 11
     # Source de données et livre par défaut (modifiables au besoin)
-    api_limit: int = 30
+    api_limit: int = 60
     book_id: int = 11  # Alice's Adventures in Wonderland (Project Gutenberg)
 
     # Champs utilitaires non sérialisés

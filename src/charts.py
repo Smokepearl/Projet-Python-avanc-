@@ -47,10 +47,16 @@ def build_db_figure(rows: Sequence, column: str = "length",
     values = [r[column] for r in rows]
 
     ax.bar(range(len(names)), values, color=accent_color)
-    ax.set_title(f"{label.capitalize()} des Pokémon en base")
+    ax.set_title(f"{label.capitalize()} des {len(names)} Pokémon en base")
     ax.set_ylabel(ylabel)
-    ax.set_xticks(range(len(names)))
-    ax.set_xticklabels(names, rotation=75, ha="right", fontsize=7)
+
+    # Avec beaucoup de barres, on n'affiche qu'une étiquette sur N pour rester
+    # lisible (sinon les noms se chevauchent).
+    step = max(1, len(names) // 25)
+    ticks = list(range(0, len(names), step))
+    ax.set_xticks(ticks)
+    ax.set_xticklabels([names[i] for i in ticks], rotation=75, ha="right",
+                       fontsize=7)
     fig.tight_layout()
     return fig
 
