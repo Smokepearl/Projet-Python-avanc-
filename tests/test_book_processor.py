@@ -1,7 +1,13 @@
 """Tests unitaires du traitement de livre (sans accès réseau)."""
 
+import os
+import sys
 import unittest
 from collections import OrderedDict
+
+# Permet d'exécuter ce fichier directement (python tests/test_book_processor.py)
+# autant que via « python -m unittest discover ».
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src import book_processor as bp
 

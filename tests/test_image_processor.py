@@ -1,10 +1,14 @@
 """Tests unitaires du traitement d'images (sans réseau, images synthétiques)."""
 
 import os
+import sys
 import tempfile
 import unittest
 
 from PIL import Image
+
+# Permet d'exécuter ce fichier directement ou via « python -m unittest ».
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src import image_processor as ip
 
