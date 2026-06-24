@@ -62,8 +62,8 @@ def make_logo(size: int = 320) -> str:
         draw.line([(cx - half + 16, y + 4), (cx - 10, y - 2)], fill=BLACK, width=2)
         draw.line([(cx + 10, y - 2), (cx + half - 16, y + 4)], fill=BLACK, width=2)
 
-    # --- Initiales du projet au-dessus du livre ---
-    _centered_text(draw, cx, size * 0.16, "PA", _load_font(int(size * 0.16)))
+    # --- Initiales au-dessus du livre ---
+    _centered_text(draw, cx, size * 0.16, "HE", _load_font(int(size * 0.16)))
 
     # --- Nom du cours en bas, dans le médaillon ---
     _centered_text(draw, cx, size * 0.72, "PYTHON", _load_font(int(size * 0.075)))
