@@ -1,10 +1,12 @@
-"""Génération du rapport Word (Partie 2) avec python-docx.
+"""Génération du rapport Word avec python-docx.
 
-Le rapport contient :
+Le rapport unique couvre les deux parties du projet :
     * Une page de titre : titre du livre, photo n° 1, auteur du livre,
       auteur du rapport.
-    * Une page de graphique : graphique de distribution des longueurs de
-      paragraphes + description (statistiques + source).
+    * Une section « Partie 1 » : résumé des données téléchargées depuis
+      Internet (PokeAPI), agrégation calculée en SQL et graphique des données.
+    * Une section « Partie 2 » : graphique de distribution des longueurs de
+      paragraphes du premier chapitre + description (statistiques + source).
 
 Les en-têtes utilisent différents styles avec des polices modifiées
 (gras, italique), comme demandé.
@@ -38,16 +40,74 @@ def _add_custom_heading(doc: Document, text: str, size: int,
     run.font.name = "Calibri"
 
 
+def _add_part1_section(doc: Document, db) -> None:
+    """Ajoute la section « Partie 1 » : données PokeAPI, agrégation SQL, graphique.
+
+    :param db: instance ``database.Database`` contenant les données téléchargées.
+    """
+    heading = doc.add_heading("Partie 1 — Données téléchargées depuis Internet", level=1)
+    for run in heading.runs:
+        run.font.bold = True
+
+    rows = db.fetch_all()
+    if not rows:
+        doc.add_paragraph(
+            "Aucune donnée n'était présente dans la base au moment de la "
+            "génération du rapport."
+        )
+        doc.add_page_break()
+        return
+
+    doc.add_paragraph(
+        f"L'application a téléchargé {len(rows)} Pokémon au format JSON depuis "
+        "l'API publique PokeAPI (https://pokeapi.co), puis a stocké un "
+        "sous-ensemble des données (nom, taille, état, poids) dans une base "
+        "SQLite. Le tableau ci-dessous présente une agrégation calculée par "
+        "une requête SQL."
+    )
+
+    # Tableau d'agrégation SQL (taille en cm, poids en kg)
+    doc.add_heading("Agrégation (requête SQL)", level=2)
+    metrics = [("length", "Taille", "cm"), ("size", "Poids", "kg")]
+    table = doc.add_table(rows=1, cols=5)
+    table.style = "Light Grid Accent 1"
+    for i, txt in enumerate(("Mesure", "Somme", "Moyenne", "Minimum", "Maximum")):
+        run = table.rows[0].cells[i].paragraphs[0].add_run(txt)
+        run.font.bold = True
+    for column, label, unit in metrics:
+        agg = db.aggregate(column)
+        cells = table.add_row().cells
+        cells[0].text = f"{label} ({unit})"
+        cells[1].text = f"{agg['total']:.1f}"
+        cells[2].text = f"{agg['moyenne']:.2f}"
+        cells[3].text = f"{agg['minimum']:.1f}"
+        cells[4].text = f"{agg['maximum']:.1f}"
+
+    # Graphique des données de la base (poids)
+    doc.add_heading("Graphique des données", level=2)
+    chart_path = os.path.join(OUTPUT_DIR, "data_chart.png")
+    fig = charts.build_db_figure(rows, column="size")
+    charts.save_figure(fig, chart_path)
+    pic_para = doc.add_paragraph()
+    pic_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    pic_para.add_run().add_picture(chart_path, width=Inches(5.8))
+
+    doc.add_page_break()
+
+
 def generate_report(
     book: BookData,
     photo_path: str,
     report_author: str = "ELIDRISSI Hamza et GUY Michel",
     output_path: str | None = None,
+    db=None,
 ) -> str:
     """Construit le document Word et l'enregistre. Renvoie le chemin du fichier.
 
     :param book: résultat de ``book_processor.analyze_book``.
     :param photo_path: chemin de « photo n° 1 » (image #1 + logo).
+    :param db: instance ``database.Database`` (Partie 1). Si fournie, une
+               section résumant les données téléchargées est ajoutée.
     """
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     if output_path is None:
@@ -83,9 +143,16 @@ def generate_report(
     doc.add_page_break()
 
     # ------------------------------------------------------------------ #
-    # PAGE DE GRAPHIQUE
+    # SECTION PARTIE 1 (données téléchargées + agrégation SQL + graphique)
     # ------------------------------------------------------------------ #
-    heading = doc.add_heading("Distribution des longueurs des paragraphes", level=1)
+    if db is not None:
+        _add_part1_section(doc, db)
+
+    # ------------------------------------------------------------------ #
+    # SECTION PARTIE 2 — page de graphique (distribution des paragraphes)
+    # ------------------------------------------------------------------ #
+    heading = doc.add_heading(
+        "Partie 2 — Distribution des longueurs des paragraphes", level=1)
     for run in heading.runs:
         run.font.italic = True  # style d'en-tête modifié
 
@@ -127,5 +194,11 @@ def generate_report(
         for run in cells[0].paragraphs[0].runs:
             run.font.bold = True
 
-    doc.save(output_path)
+    try:
+        doc.save(output_path)
+    except PermissionError as exc:
+        raise PermissionError(
+            f"Impossible d'écrire « {output_path} » : le fichier est "
+            "probablement ouvert dans Word. Fermez-le puis réessayez."
+        ) from exc
     return output_path

@@ -43,6 +43,9 @@ Projet réalisé dans le cadre du cours *Python Avancé*.
   (`ProcessPoolExecutor`) — *bonus* (calcul CPU-bound, vrai parallélisme).
 
 ### Partie 2 — Rapport Word
+- **Rapport unique couvrant les deux parties** : une page de titre, une section
+  *Partie 1* (résumé des données PokeAPI + agrégation SQL + graphique) et une
+  section *Partie 2* (analyse du livre).
 - Téléchargement de la version texte d'un livre Gutenberg.
 - Extraction du **titre**, de l'**auteur** et du **premier chapitre**.
 - Comptage des mots par paragraphe, **arrondi à la dizaine inférieure**

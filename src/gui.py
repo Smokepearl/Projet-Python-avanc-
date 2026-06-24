@@ -320,7 +320,8 @@ class App(tk.Tk):
         try:
             book = analyze_book(self.config_obj.book_id)
             photo = image_processor.build_photo_one()
-            path = word_report.generate_report(book, photo, report_author=author)
+            path = word_report.generate_report(book, photo, report_author=author,
+                                               db=self.db)
             self.after(0, lambda: self._on_report_done(path))
         except (BookProcessingError, image_processor.ImageProcessingError) as exc:
             self.after(0, lambda: self._on_report_error(str(exc)))
