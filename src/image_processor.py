@@ -85,15 +85,22 @@ def rotate_and_paste_logo(
     base: Image.Image,
     logo: Image.Image,
     angle: float = 30.0,
-    logo_size: tuple[int, int] = (110, 110),
+    logo_size: tuple[int, int] = (70, 70),
 ) -> Image.Image:
-    """Fait pivoter le logo et le colle dans le coin de l'image de base.
+    """Fait pivoter le logo et le colle discrètement dans le coin de l'image.
 
-    Renvoie une nouvelle image (« photo n° 1 ») sans modifier l'originale.
+    Le fond blanc du logo est rendu transparent : seul l'emblème (les traits
+    noirs) apparaît, en filigrane, pour rester discret. Renvoie une nouvelle
+    image (« photo n° 1 ») sans modifier l'originale.
     """
     photo = base.copy().convert("RGBA")
-    logo_small = logo.convert("RGBA").resize(logo_size, Image.LANCZOS)
-    rotated = logo_small.rotate(angle, expand=True)
+
+    gray = logo.convert("L").resize(logo_size, Image.LANCZOS)
+    # Alpha : blanc -> transparent (0), noir -> opaque (255).
+    alpha = gray.point(lambda p: 255 - p)
+    emblem = Image.new("RGBA", logo_size, (0, 0, 0, 255))
+    emblem.putalpha(alpha)
+    rotated = emblem.rotate(angle, expand=True)
 
     # On colle en bas à droite avec une petite marge.
     margin = 12
