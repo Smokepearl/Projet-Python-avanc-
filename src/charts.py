@@ -22,8 +22,8 @@ from matplotlib.figure import Figure
 
 # Libellés français et unités pour les colonnes numériques affichables.
 COLUMN_LABELS = {
-    "length": ("taille", "Taille / hauteur (dm)"),
-    "size": ("poids", "Poids (hg)"),
+    "length": ("taille", "Taille (cm)"),
+    "size": ("poids", "Poids (kg)"),
 }
 
 

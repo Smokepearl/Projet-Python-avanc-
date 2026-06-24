@@ -232,17 +232,18 @@ class App(tk.Tk):
             return
 
         label = self.metric_var.get()
+        unit = "cm" if column == "length" else "kg"
         lines = [
             f"Agrégation SQL sur la {label} de {agg['n']} Pokémon :",
-            f"  • Somme    : {agg['total']:.1f}",
-            f"  • Moyenne  : {agg['moyenne']:.2f}",
-            f"  • Minimum  : {agg['minimum']:.1f}",
-            f"  • Maximum  : {agg['maximum']:.1f}",
+            f"  • Somme    : {agg['total']:.1f} {unit}",
+            f"  • Moyenne  : {agg['moyenne']:.2f} {unit}",
+            f"  • Minimum  : {agg['minimum']:.1f} {unit}",
+            f"  • Maximum  : {agg['maximum']:.1f} {unit}",
             "",
             f"Moyenne de la {label} par état (type) :",
         ]
         for state, avg, n in by_state:
-            lines.append(f"  • {state:<12} {avg:6.2f}  ({n} pokémon)")
+            lines.append(f"  • {state:<12} {avg:6.2f} {unit}  ({n} pokémon)")
         self.show_result("\n".join(lines))
         self.set_status(f"Agrégation SQL calculée sur la colonne « {column} ».")
 

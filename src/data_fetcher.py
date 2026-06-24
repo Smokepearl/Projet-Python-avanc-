@@ -42,13 +42,18 @@ def _get_json(url: str, params: dict | None = None) -> dict:
 
 
 def _parse_detail(detail: dict) -> dict:
-    """Extrait le sous-ensemble (id, name, size, state, length) d'un détail brut."""
+    """Extrait le sous-ensemble (id, name, size, state, length) d'un détail brut.
+
+    Conversion des unités PokeAPI vers des unités courantes :
+        * height est en décimètres -> on stocke la taille en centimètres (×10) ;
+        * weight est en hectogrammes -> on stocke le poids en kilogrammes (÷10).
+    """
     return {
         "id": detail["id"],
         "name": detail["name"],
-        "size": float(detail["weight"]),      # poids   -> taille
+        "size": float(detail["weight"]) / 10.0,   # poids (hg -> kg)
         "state": detail["types"][0]["type"]["name"],  # type principal -> état
-        "length": float(detail["height"]),    # hauteur -> longueur
+        "length": float(detail["height"]) * 10.0,  # taille (dm -> cm)
     }
 
 

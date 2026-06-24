@@ -24,8 +24,8 @@ class TestParseDetail(unittest.TestCase):
     def test_parse_detail_maps_subset(self):
         row = data_fetcher._parse_detail(POKEMON_DETAIL)
         self.assertEqual(row["name"], "pikachu")
-        self.assertEqual(row["size"], 60.0)        # weight -> size
-        self.assertEqual(row["length"], 4.0)       # height -> length
+        self.assertEqual(row["size"], 6.0)         # weight 60 hg -> 6.0 kg
+        self.assertEqual(row["length"], 40.0)      # height 4 dm -> 40 cm
         self.assertEqual(row["state"], "electric")  # type -> state
         self.assertEqual(row["id"], 25)
 
