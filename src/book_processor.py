@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import re
 from collections import OrderedDict
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 
 import requests
@@ -175,6 +176,26 @@ def count_words(paragraph: str) -> int:
     return len(re.findall(r"\b\w+\b", paragraph))
 
 
+def count_words_parallel(paragraphs: list[str], max_workers: int | None = None) -> list[int]:
+    """Compte les mots de chaque paragraphe **en parallèle** (multiprocessing).
+
+    C'est le bonus « paralléliser les calculs par l'utilisation des processus » :
+    le comptage est CPU-bound, donc on répartit les paragraphes sur plusieurs
+    processus via un ``ProcessPoolExecutor`` (vrai parallélisme, contrairement
+    aux threads limités par le GIL pour le calcul pur).
+
+    En cas d'échec (environnement sans multiprocessing), on retombe
+    proprement sur un calcul séquentiel.
+    """
+    if not paragraphs:
+        return []
+    try:
+        with ProcessPoolExecutor(max_workers=max_workers) as pool:
+            return list(pool.map(count_words, paragraphs))
+    except Exception:  # noqa: BLE001 - repli robuste demandé par l'énoncé
+        return [count_words(p) for p in paragraphs]
+
+
 def round_down_to_ten(n: int) -> int:
     """Arrondit à la dizaine par le bas (123, 127, 129 -> 120)."""
     return (n // 10) * 10
@@ -191,8 +212,12 @@ def build_distribution(rounded_sorted: list[int]) -> "OrderedDict[int, int]":
 # ---------------------------------------------------------------------- #
 # Orchestration
 # ---------------------------------------------------------------------- #
-def analyze_book(book_id: int = 11) -> BookData:
-    """Pipeline complet : télécharge et analyse un livre. Renvoie un BookData."""
+def analyze_book(book_id: int = 11, parallel: bool = True) -> BookData:
+    """Pipeline complet : télécharge et analyse un livre. Renvoie un BookData.
+
+    :param parallel: si True, le comptage des mots est réparti sur plusieurs
+                     processus (bonus multiprocessing).
+    """
     text, url = download_book(book_id)
     title, author = extract_metadata(text)
     chapter = extract_first_chapter(text)
@@ -201,7 +226,10 @@ def analyze_book(book_id: int = 11) -> BookData:
     if not paragraphs:
         raise BookProcessingError("Premier chapitre introuvable ou vide.")
 
-    word_counts = [count_words(p) for p in paragraphs]
+    if parallel:
+        word_counts = count_words_parallel(paragraphs)
+    else:
+        word_counts = [count_words(p) for p in paragraphs]
     rounded = sorted(round_down_to_ten(c) for c in word_counts)
     distribution = build_distribution(rounded)
 

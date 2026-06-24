@@ -39,6 +39,8 @@ Projet réalisé dans le cadre du cours *Python Avancé*.
 - **Bouton graphique** : histogramme **matplotlib** intégré *dans* la fenêtre principale.
 - **Barre d'état** en bas de fenêtre indiquant la dernière opération.
 - **Téléchargement parallélisé** (threads) pour ne pas geler l'interface — *bonus*.
+- **Comptage des mots parallélisé** sur plusieurs **processus**
+  (`ProcessPoolExecutor`) — *bonus* (calcul CPU-bound, vrai parallélisme).
 
 ### Partie 2 — Rapport Word
 - Téléchargement de la version texte d'un livre Gutenberg.
@@ -175,6 +177,7 @@ Les tests n'accèdent pas au réseau (mocks + images synthétiques + base en mé
 | Partie 1 – Application desktop | `src/gui.py`, `src/database.py`, `src/data_fetcher.py`, `src/charts.py` |
 | Partie 2 – Rapport Word | `src/book_processor.py`, `src/image_processor.py`, `src/word_report.py` |
 | Qualité du code | modules découplés, docstrings, type hints, gestion d'erreurs |
-| Bonus – threads/processus | téléchargement parallèle (`ThreadPoolExecutor`) |
+| Bonus – threads | téléchargement réseau parallèle (`ThreadPoolExecutor`) |
+| Bonus – processus | comptage des mots parallélisé (`ProcessPoolExecutor`) |
 | GitHub | dépôt + `.gitignore` + ce README |
 | Ligne d'état (optionnel) | barre d'état Tkinter en bas de fenêtre |

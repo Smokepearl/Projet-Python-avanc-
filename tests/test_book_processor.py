@@ -57,6 +57,15 @@ class TestBookProcessor(unittest.TestCase):
         self.assertEqual(bp.count_words("un deux trois quatre cinq"), 5)
         self.assertEqual(bp.count_words("  espaces   multiples  "), 2)
 
+    def test_count_words_parallel_matches_sequential(self):
+        paras = ["un deux trois", "a b c d e", "seul", ""]
+        parallel = bp.count_words_parallel(paras)
+        sequential = [bp.count_words(p) for p in paras]
+        self.assertEqual(parallel, sequential)
+
+    def test_count_words_parallel_empty(self):
+        self.assertEqual(bp.count_words_parallel([]), [])
+
     def test_build_distribution_sorted_and_counted(self):
         rounded = sorted([20, 20, 10, 30, 20])
         dist = bp.build_distribution(rounded)
