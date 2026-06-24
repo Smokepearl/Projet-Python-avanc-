@@ -95,8 +95,9 @@ class App(tk.Tk):
         self.btn_chart.pack(side="left", padx=6)
 
         # Libellés français affichés -> noms de colonnes SQL internes.
-        self.METRIC_COLUMNS = {"longueur": "length", "taille": "size"}
-        self.metric_var = tk.StringVar(value="longueur")
+        # taille = hauteur (length), poids = weight (size). Deux mesures distinctes.
+        self.METRIC_COLUMNS = {"taille": "length", "poids": "size"}
+        self.metric_var = tk.StringVar(value="taille")
         ttk.Label(self.toolbar, text="Valeur :").pack(side="left", padx=(16, 4))
         self.metric_combo = ttk.Combobox(
             self.toolbar, textvariable=self.metric_var, width=10,
