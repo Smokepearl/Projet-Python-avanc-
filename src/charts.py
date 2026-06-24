@@ -20,12 +20,21 @@ matplotlib.use("Agg")  # backend non interactif par défaut (sûr hors GUI)
 from matplotlib.figure import Figure
 
 
-def build_db_figure(rows: Sequence, accent_color: str = "#2d6cdf") -> Figure:
+# Libellés français et unités pour les colonnes numériques affichables.
+COLUMN_LABELS = {
+    "length": ("longueur", "Longueur (dm)"),
+    "size": ("taille", "Taille / poids (hg)"),
+}
+
+
+def build_db_figure(rows: Sequence, column: str = "length",
+                    accent_color: str = "#2d6cdf") -> Figure:
     """Construit un graphique en barres des données de la base.
 
-    Affiche la longueur (hauteur) des Pokémon présents en base.
+    :param column: colonne numérique à représenter (``"length"`` ou ``"size"``).
     ``rows`` est une liste d'objets indexables par clé (sqlite3.Row).
     """
+    label, ylabel = COLUMN_LABELS.get(column, (column, column))
     fig = Figure(figsize=(6, 4), dpi=100)
     ax = fig.add_subplot(111)
 
@@ -35,11 +44,11 @@ def build_db_figure(rows: Sequence, accent_color: str = "#2d6cdf") -> Figure:
         return fig
 
     names = [r["name"].capitalize() for r in rows]
-    lengths = [r["length"] for r in rows]
+    values = [r[column] for r in rows]
 
-    ax.bar(range(len(names)), lengths, color=accent_color)
-    ax.set_title("Longueur (hauteur) des Pokémon en base")
-    ax.set_ylabel("Longueur (dm)")
+    ax.bar(range(len(names)), values, color=accent_color)
+    ax.set_title(f"{label.capitalize()} des Pokémon en base")
+    ax.set_ylabel(ylabel)
     ax.set_xticks(range(len(names)))
     ax.set_xticklabels(names, rotation=75, ha="right", fontsize=7)
     fig.tight_layout()

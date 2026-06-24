@@ -94,13 +94,17 @@ class App(tk.Tk):
                                     command=self.on_show_chart)
         self.btn_chart.pack(side="left", padx=6)
 
-        self.metric_var = tk.StringVar(value="length")
+        # Libellés français affichés -> noms de colonnes SQL internes.
+        self.METRIC_COLUMNS = {"longueur": "length", "taille": "size"}
+        self.metric_var = tk.StringVar(value="longueur")
         ttk.Label(self.toolbar, text="Valeur :").pack(side="left", padx=(16, 4))
         self.metric_combo = ttk.Combobox(
             self.toolbar, textvariable=self.metric_var, width=10,
-            values=["length", "size"], state="readonly",
+            values=list(self.METRIC_COLUMNS.keys()), state="readonly",
         )
         self.metric_combo.pack(side="left")
+        # Changer la valeur met à jour graphique + agrégation automatiquement.
+        self.metric_combo.bind("<<ComboboxSelected>>", self.on_metric_change)
 
         # Zone de résultat texte (dans la fenêtre principale)
         self.result_text = tk.Text(self, height=7, wrap="word")
@@ -203,19 +207,30 @@ class App(tk.Tk):
     # ------------------------------------------------------------------ #
     # Actions : agrégation & graphique
     # ------------------------------------------------------------------ #
+    def _current_column(self) -> str:
+        """Renvoie le nom de colonne SQL correspondant au choix de l'utilisateur."""
+        return self.METRIC_COLUMNS.get(self.metric_var.get(), "length")
+
+    def on_metric_change(self, event=None) -> None:
+        """Quand on change la valeur : rafraîchit graphique et agrégation."""
+        if self.db.is_empty():
+            return
+        self.on_show_chart()
+        self.on_aggregate()
+
     def on_aggregate(self) -> None:
         if self.db.is_empty():
             messagebox.showinfo("Base vide", "Téléchargez d'abord des données.")
             return
         try:
-            column = self.metric_var.get()
+            column = self._current_column()
             agg = self.db.aggregate(column)
             by_state = self.db.aggregate_by_state(column)
         except Exception as exc:  # noqa: BLE001 - robustesse demandée
             messagebox.showerror("Erreur", f"Agrégation impossible : {exc}")
             return
 
-        label = "longueur" if column == "length" else "taille"
+        label = self.metric_var.get()
         lines = [
             f"Agrégation SQL sur la {label} de {agg['n']} Pokémon :",
             f"  • Somme    : {agg['total']:.1f}",
@@ -235,9 +250,13 @@ class App(tk.Tk):
         if not rows:
             messagebox.showinfo("Base vide", "Téléchargez d'abord des données.")
             return
-        fig = charts.build_db_figure(rows, accent_color=self.config_obj.accent_color)
+        column = self._current_column()
+        fig = charts.build_db_figure(rows, column=column,
+                                     accent_color=self.config_obj.accent_color)
         self._embed_figure(fig)
-        self.set_status("Graphique affiché dans la fenêtre principale.")
+        self.set_status(
+            f"Graphique de la {self.metric_var.get()} affiché dans la fenêtre."
+        )
 
     def _embed_figure(self, fig) -> None:
         self._clear_chart()
