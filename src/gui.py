@@ -253,23 +253,46 @@ class App(tk.Tk):
             messagebox.showinfo("Base vide", "Téléchargez d'abord des données.")
             return
         column = self._current_column()
-        fig = charts.build_db_figure(rows, column=column,
+        # wide=True : tous les noms affichés, défilement horizontal géré ci-dessous.
+        fig = charts.build_db_figure(rows, column=column, wide=True,
                                      accent_color=self.config_obj.accent_color)
         self._embed_figure(fig)
         self.set_status(
-            f"Graphique de la {self.metric_var.get()} affiché dans la fenêtre."
+            f"Graphique de la {self.metric_var.get()} affiché "
+            "(faites défiler vers la droite pour voir tous les noms)."
         )
 
     def _embed_figure(self, fig) -> None:
+        """Insère la figure dans une zone défilable horizontalement."""
         self._clear_chart()
-        self._canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
+
+        # Canvas Tk conteneur + barre de défilement horizontale.
+        scroller = tk.Canvas(self.chart_frame, bg="white", highlightthickness=0)
+        hbar = ttk.Scrollbar(self.chart_frame, orient="horizontal",
+                             command=scroller.xview)
+        scroller.configure(xscrollcommand=hbar.set)
+        hbar.pack(side="bottom", fill="x")
+        scroller.pack(side="top", fill="both", expand=True)
+
+        # La figure matplotlib (large) est placée dans le canvas défilable.
+        self._canvas = FigureCanvasTkAgg(fig, master=scroller)
         self._canvas.draw()
-        self._canvas.get_tk_widget().pack(fill="both", expand=True)
+        widget = self._canvas.get_tk_widget()
+        scroller.create_window((0, 0), window=widget, anchor="nw")
+        widget.update_idletasks()
+        scroller.configure(scrollregion=scroller.bbox("all"))
+
+        # Molette (avec Maj) = défilement horizontal.
+        scroller.bind_all(
+            "<Shift-MouseWheel>",
+            lambda e: scroller.xview_scroll(int(-e.delta / 120), "units"),
+        )
 
     def _clear_chart(self) -> None:
-        if self._canvas is not None:
-            self._canvas.get_tk_widget().destroy()
-            self._canvas = None
+        # On détruit tout le contenu de la zone graphique (canvas + scrollbar).
+        for child in self.chart_frame.winfo_children():
+            child.destroy()
+        self._canvas = None
 
     # ------------------------------------------------------------------ #
     # Options : couleurs & polices

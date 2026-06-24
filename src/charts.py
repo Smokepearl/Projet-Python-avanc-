@@ -28,14 +28,24 @@ COLUMN_LABELS = {
 
 
 def build_db_figure(rows: Sequence, column: str = "length",
-                    accent_color: str = "#2d6cdf") -> Figure:
+                    accent_color: str = "#2d6cdf", wide: bool = False) -> Figure:
     """Construit un graphique en barres des données de la base.
 
     :param column: colonne numérique à représenter (``"length"`` ou ``"size"``).
+    :param wide: si True, la figure s'élargit pour afficher **tous** les noms
+                 (utilisé dans la fenêtre, avec défilement horizontal). Si False,
+                 la figure reste compacte avec des étiquettes espacées (rapport).
     ``rows`` est une liste d'objets indexables par clé (sqlite3.Row).
     """
     label, ylabel = COLUMN_LABELS.get(column, (column, column))
-    fig = Figure(figsize=(6, 4), dpi=100)
+    n = len(rows)
+
+    if wide:
+        # ~0,32 pouce par barre pour laisser la place à chaque nom.
+        width = max(6, n * 0.32)
+        fig = Figure(figsize=(width, 4.2), dpi=100)
+    else:
+        fig = Figure(figsize=(6, 4), dpi=100)
     ax = fig.add_subplot(111)
 
     if not rows:
@@ -46,17 +56,22 @@ def build_db_figure(rows: Sequence, column: str = "length",
     names = [r["name"].capitalize() for r in rows]
     values = [r[column] for r in rows]
 
-    ax.bar(range(len(names)), values, color=accent_color)
-    ax.set_title(f"{label.capitalize()} des {len(names)} Pokémon en base")
+    ax.bar(range(n), values, color=accent_color)
+    ax.set_title(f"{label.capitalize()} des {n} Pokémon en base")
     ax.set_ylabel(ylabel)
 
-    # Avec beaucoup de barres, on n'affiche qu'une étiquette sur N pour rester
-    # lisible (sinon les noms se chevauchent).
-    step = max(1, len(names) // 25)
-    ticks = list(range(0, len(names), step))
-    ax.set_xticks(ticks)
-    ax.set_xticklabels([names[i] for i in ticks], rotation=75, ha="right",
-                       fontsize=7)
+    if wide:
+        # On affiche TOUS les noms (le défilement horizontal gère la largeur).
+        ax.set_xticks(range(n))
+        ax.set_xticklabels(names, rotation=90, fontsize=8)
+        ax.set_xlim(-0.5, n - 0.5)
+    else:
+        # Compact : une étiquette sur N pour rester lisible une fois réduit.
+        step = max(1, n // 25)
+        ticks = list(range(0, n, step))
+        ax.set_xticks(ticks)
+        ax.set_xticklabels([names[i] for i in ticks], rotation=75, ha="right",
+                           fontsize=7)
     fig.tight_layout()
     return fig
 
