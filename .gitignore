@@ -18,5 +18,8 @@ settings.json
 .DS_Store
 Thumbs.db
 
+# Énoncé du projet (non versionné)
+Projet PYTHON AVANCE.pdf
+
 # On garde le logo (image #2 lue depuis le disque)
 !assets/logo.png
